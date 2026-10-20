@@ -70,10 +70,12 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 <button data-tab="me"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.600-7 8-7s8 2.600 8 7"/></svg>Mon espace</button>
 </nav>
 <script type="module">
-import{firebaseConfig as FC}from"./firebase-config.js";
-import{initializeApp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,signOut}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import{getFirestore,collection,doc,onSnapshot,addDoc,setDoc,updateDoc,deleteDoc}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+const V="https://www.gstatic.com/firebasejs/10.14.1/",ERR=[];let FC=null,FB={};
+try{FC=(await import("./firebase-config.js")).firebaseConfig||null}catch(e){}
+if(!FC){try{const t=await(await fetch("firebase-config.js",{cache:"no-store"})).text(),m=t.match(/firebaseConfig\s*=\s*(\{[\s\S]*?\})/);if(m)FC=Function("return "+m[1])()}catch(e){}}
+if(!FC)ERR.push("Fichier firebase-config.js introuvable ou illisible.");
+try{FB=Object.assign({},...await Promise.all(["app","auth","firestore"].map(n=>import(V+"firebase-"+n+".js"))))}catch(e){ERR.push("Impossible de charger Firebase (bloqueur de publicités ou connexion ?) : "+e.message)}
+const{initializeApp,getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,signOut,getFirestore,collection,doc,onSnapshot,addDoc,setDoc,updateDoc,deleteDoc}=FB;
 const $=s=>document.querySelector(s),E=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const NEED=[["m","Matériel","needsMat"],["s","Staff","needsStaff"],["f","Financier","needsFin"]],CAT={"Matériel":"m","Staff":"s","Financier":"f"},COL=["--blue","--ochre","--sage","--terra","--brown"];
 const S={tab:"events",clubs:[],events:[],props:[],db:null,me:null,ready:false,filter:"up",q:"",sheet:null,help:false,cdel:null};
@@ -144,7 +146,7 @@ const loginScreen=()=>`<h2>Bienvenue</h2><p class="mut">Connecte-toi pour voir l
 async function authAction(d){const em=($("#em")?.value||"").trim(),pw=$("#pw")?.value||"";try{if(!em)throw"Saisis ton email.";if(d.reset){await sendPasswordResetEmail(auth,em);toast("Email de réinitialisation envoyé.")}else{if(pw.length<6)throw"Mot de passe : 6 caractères minimum.";await createUserWithEmailAndPassword(auth,em,pw)}}catch(x){toast(typeof x==="string"?x:AUTH_ERR[x.code]||"Action impossible. Réessaie.")}}
 async function seedClubs(){try{await Promise.all(SEED.map((n,i)=>setDoc(doc(fs,"clubs","c"+String(i+1).padStart(2,"0")),{name:n})));toast("Clubs ajoutés")}catch(x){toast(AUTH_ERR[x.code]||"Ajout impossible.")}}
 let auth,fs,db,un=[];
-if(!FC.apiKey||/COLLE/.test(FC.apiKey)){$(".tabs").hidden=true;$("#app").innerHTML=`<p class="empty">Configuration Firebase manquante : remplis le fichier firebase-config.js (voir README).</p>`}
+if(ERR.length||!FC.apiKey||/COLLE/.test(FC.apiKey)){$(".tabs").hidden=true;$("#app").innerHTML=`<p class="empty">${E(ERR.join(" ")||"Configuration Firebase manquante : remplis le fichier firebase-config.js (voir README).")}</p>`}
 else{const app=initializeApp(FC);auth=getAuth(app);fs=getFirestore(app);
 db={collection:n=>({onSnapshot:(f,e)=>onSnapshot(collection(fs,n),f,e),add:d=>addDoc(collection(fs,n),d),doc:id=>({update:d=>updateDoc(doc(fs,n,id),d),delete:()=>deleteDoc(doc(fs,n,id))})})};
 const sub=(k,p)=>db.collection(p).onSnapshot(s=>{S[k]=s.docs.map(d=>({...d.data(),id:d.id}));paint()},()=>{S.err=1;paint()});

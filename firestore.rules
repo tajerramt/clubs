@@ -8,7 +8,7 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/clubs/$(clubId)).data.get('ownerId', '') == request.auth.uid;
     }
     match /clubs/{clubId} {
-      allow read: if signedIn();
+      allow read: if true;
       allow create: if signedIn() && request.resource.data.get('ownerId', request.auth.uid) == request.auth.uid;
       allow update: if signedIn() && (
         (resource.data.get('ownerId', '') == request.auth.uid && request.resource.data.ownerId == request.auth.uid)
@@ -17,7 +17,7 @@ service cloud.firestore {
       allow delete: if false;
     }
     match /events/{id} {
-      allow read: if signedIn();
+      allow read: if true;
       allow create: if ownsClub(request.resource.data.clubId);
       allow update: if ownsClub(resource.data.clubId) && request.resource.data.clubId == resource.data.clubId;
       allow delete: if ownsClub(resource.data.clubId);

@@ -22,6 +22,12 @@ service cloud.firestore {
       allow update: if ownsClub(resource.data.clubId) && request.resource.data.clubId == resource.data.clubId;
       allow delete: if ownsClub(resource.data.clubId);
     }
+    match /needs/{id} {
+      allow read: if signedIn();
+      allow create: if ownsClub(request.resource.data.clubId);
+      allow update: if ownsClub(resource.data.clubId) && request.resource.data.clubId == resource.data.clubId;
+      allow delete: if ownsClub(resource.data.clubId);
+    }
     match /proposals/{id} {
       allow read: if signedIn();
       allow create: if ownsClub(request.resource.data.clubId);
